@@ -1,0 +1,37 @@
+name: dynavelo
+channels:
+  - pytorch
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pytorch=1.12.1
+  - torchvision=0.13.1
+  - cudatoolkit=11.3
+  - numpy=1.22
+  - scipy=1.10
+  - pandas=1.5
+  - scikit-learn=1.0
+  - statsmodels
+  - numba
+  - leidenalg=0.8
+  - matplotlib
+  - seaborn
+  - ipykernel
+  - tqdm
+  - pip:
+    - anndata==0.10.2
+    - scanpy==1.9.5
+    - scvelo==0.2.4
+    - multivelo==0.1.2
+    - torchdiffeq==0.2.3
+    - torchsde==0.2.5
+    - torchmetrics==0.11.1
+    - pygpcca==1.0.4
+    - bbknn==1.6.0
+    - harmonypy==0.0.9
+    - loompy==3.0.7
+    - scikit-misc==0.3.0
+    - adjustText==1.2.0
