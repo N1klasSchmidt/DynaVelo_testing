@@ -17,7 +17,7 @@ dependencies:
   - ipykernel
   - tqdm
   - mkl
-  - intel-openmp
+  # - intel-openmp
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cu118
     - torch
