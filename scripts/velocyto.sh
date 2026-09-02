@@ -26,7 +26,7 @@ LOG_FILE="${OUTPUT_LOCATION}/velocyto_$(date +%Y%m%d_%H%M%S).log"
     -b ${READ_LOCATION}/filtered_feature_bc_matrix/barcodes.tsv.gz \
     -o ${OUTPUT_LOCATION} \
     ${READ_LOCATION}/gex_possorted_bam.bam \
-    /home/${USER_ID}/genes_mm10.gtf
+    /home/${USER_ID}/mm10_genes.gtf
   
   EXIT_STATUS=$?
   
