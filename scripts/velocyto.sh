@@ -26,7 +26,7 @@ LOG_FILE="${OUTPUT_LOCATION}/velocyto_$(date +%Y%m%d_%H%M%S).log"
     -b ${READ_LOCATION}/filtered_feature_bc_matrix/barcodes.tsv.gz \
     -o ${OUTPUT_LOCATION} \
     ${READ_LOCATION}/gex_possorted_bam.bam \
-    /omics/groups/OE0132/internal/agreco/opt/mm10/refdata-cellranger-arc-mm10-2020-A-2.0.0/genes/genes.gtf.gz
+    /home/${USER_ID}/genes_mm10.gtf
   
   EXIT_STATUS=$?
   
