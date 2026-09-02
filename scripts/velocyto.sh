@@ -1,7 +1,31 @@
-velocyto run \
-  -b filtered_feature_bc_matrix/barcodes.tsv.gz \
-  -o /path/to/output_folder \
-  gex_possorted_bam.bam \
-  /omics/groups/OE0132/internal/agreco/opt/mm10/refdata-cellranger-arc-mm10-2020-A-2.0.0/genes/genes.gtf.gz
+#!/bin/bash
+export USER_ID="n026t"
+source /home/${USER_ID}/.bashrc
 
+export READ_LOCATION=/omics/groups/OE0132/internal/metzj/projects/Multiome/CellRanger_Output/Exp4/ctr/outs
+export OUTPUT_LOCATION=/omics/groups/OE0132/tandem/nschmidt/velocyto_output
+
+# Create timestamped log filename
+LOG_FILE="${OUTPUT_LOCATION}/velocyto_$(date +%Y%m%d_%H%M%S).log"
+
+# Log the job start
+{
+  echo "=========================================="
+  echo "Job started at $(date)"
+  echo "Command: velocyto run"
+  echo "=========================================="
   
+  velocyto run \
+    -b ${READ_LOCATION}/filtered_feature_bc_matrix/barcodes.tsv.gz \
+    -o ${OUTPUT_LOCATION} \
+    ${READ_LOCATION}/gex_possorted_bam.bam \
+    /omics/groups/OE0132/internal/agreco/opt/mm10/refdata-cellranger-arc-mm10-2020-A-2.0.0/genes/genes.gtf.gz
+  
+  EXIT_STATUS=$?
+  
+  echo "=========================================="
+  echo "Job completed at $(date)"
+  echo "Exit status: $EXIT_STATUS"
+  echo "=========================================="
+  exit $EXIT_STATUS
+} | tee ${LOG_FILE}
