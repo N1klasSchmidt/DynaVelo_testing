@@ -25,7 +25,7 @@ LOG_FILE="${OUTPUT_LOCATION}/velocyto_$(date +%Y%m%d_%H%M%S).log"
   velocyto run \
     -b ${READ_LOCATION}/filtered_feature_bc_matrix/barcodes.tsv.gz \
     -o ${OUTPUT_LOCATION} \
-    ${READ_LOCATION}/gex_possorted_bam.bam \
+    /omics/groups/OE0132/internal/nschmidt/velocyto_data/cellsorted_gex_possorted_bam.bam \ 
     /home/${USER_ID}/mm10_genes.gtf
   
   EXIT_STATUS=$?
