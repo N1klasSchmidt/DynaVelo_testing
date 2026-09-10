@@ -69,6 +69,7 @@ scv.pp.log1p(adata_rna)
 scv.pp.moments(adata_rna, n_pcs=30, n_neighbors=50)
 
 scv.tl.umap(adata_rna)
+scv.pl.umap(adata_rna, color='celltype')
 
 nn_idx = np.loadtxt(str(nn_idx_path), delimiter=',')
 nn_dist = np.loadtxt(str(nn_dist_path), delimiter=',')
@@ -81,7 +82,7 @@ adata_result = mv.recover_dynamics_chrom(adata_rna,
                                             adata_atac,
                                             max_iter=5,
                                             init_mode="invert",
-                                            parallel=True,
+                                            parallel=False,
                                             save_plot=False,
                                             rna_only=False,
                                             fit=True,
@@ -89,8 +90,11 @@ adata_result = mv.recover_dynamics_chrom(adata_rna,
                                             extra_color_key='celltype')
 
 # Save results and compute velocity outputs
-adata_result.write(output_path / "multivelo_results.h5ad")
+multivelo_results_path = f"{output_path}multivelo_results.h5ad"
+adata_result.write(multivelo_results_path)
 mv.velocity_graph(adata_result)
 mv.latent_time(adata_result)
 mv.velocity_embedding_stream(adata_result, basis='umap', color='celltype')
-plt.savefig(output_path / 'multivelo_velocity_stream_umap.png', dpi=150)
+
+multivelo_plot_path = f"{output_path}multivelo_velocity_stream_umap.png"
+plt.savefig(multivelo_plot_path, dpi=150)
