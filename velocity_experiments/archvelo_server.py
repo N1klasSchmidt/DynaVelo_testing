@@ -26,9 +26,9 @@ data_dir_uploaded = "/omics/groups/OE0132/tandem/nschmidt/ArchVelo_Data/"
 adata_rna = sc.read_h5ad(f"{data_dir_uploaded}all_rna_counts.h5ad")
 adata_atac_raw = sc.read_h5ad(f"{data_dir_uploaded}all_atac_peaks.h5ad")
 
-peak_annotation_path = rf"{data_dir}atac_peak_annotation.tsv"
-peak_annotation = pd.read_csv(peak_annotation_path, sep = '\t')
-feature_linkage_path = f"{data_dir}analaysis/feature_linkage/feature_linkage.bedpe"
+peak_annotation_raw_path = rf"{data_dir}atac_peak_annotation.tsv"
+peak_annotation_raw = pd.read_csv(peak_annotation_raw_path, sep = '\t', index_col=[0])
+feature_linkage_path = f"{data_dir}analysis/feature_linkage/feature_linkage.bedpe"
 
 n_neigh = 50
 n_pcs = 50
@@ -38,6 +38,18 @@ data_outdir = f"{data_dir_uploaded}archvelo/processed_data/"
 model_outdir = f"{data_dir_uploaded}archvelo/modeling_results/"
 num_comps = 10
 n_jobs = 100
+
+# Prepare peak annotation file
+peak_annotation_raw["absolute_distance"] = np.abs(peak_annotation_raw["distance"].values)
+
+peak_annotation = (
+    peak_annotation_raw.sort_values("absolute_distance")
+    .groupby(level=0)
+    .first()
+).drop(columns="absolute_distance")
+
+peak_annotation_nn_path = rf"{data_dir_uploaded}atac_peak_annotation_nn.tsv"
+peak_annotation.to_csv(peak_annotation_nn_path, sep = '\t')
 
 # Prepare ATAC
 adata_atac_raw.layers['raw_counts'] = adata_atac_raw.X
@@ -62,13 +74,13 @@ sc.pp.neighbors(adata_rna, n_neigh, n_pcs = n_pcs)
 sc.tl.umap(adata_rna)
 
 # Subset peaks
-chromosome = peak_annotation.loc[:,"chrom"].values
-start = peak_annotation.loc[:,"start"].values
-end = peak_annotation.loc[:,"end"].values
+# chromosome = peak_annotation.loc[:,"chrom"].values
+# start = peak_annotation.loc[:,"start"].values
+# end = peak_annotation.loc[:,"end"].values
 
-combined_peak_names = [f"{chromosome[i]}:{start[i]}-{end[i]}" for i in range(len(chromosome))]
-peak_annotation["peak_name"] = combined_peak_names
-peak_annotation.set_index("peak_name", inplace = True)
+# combined_peak_names = [f"{chromosome[i]}:{start[i]}-{end[i]}" for i in range(len(chromosome))]
+# peak_annotation["peak_name"] = combined_peak_names
+# peak_annotation.set_index("peak_name", inplace = True)
 
 peak_annotation = peak_annotation.loc[adata_atac_raw_proc.var_names,:]
 
@@ -84,7 +96,7 @@ rel_genes = np.unique(peak_annotation[peak_annotation['gene'].isin(adata_rna.var
 adata_atac_raw_multi = sc.read_h5ad(fr"{data_dir_uploaded}all_atac_peaks.h5ad")
 
 adata_atac_agg_peaks = mv.aggregate_peaks_10x(adata_atac_raw_multi, 
-                                    peak_annotation_path, 
+                                    peak_annotation_nn_path, 
                                     feature_linkage_path, 
                                     verbose=True)
 

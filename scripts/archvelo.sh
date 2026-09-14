@@ -4,7 +4,6 @@ source /home/${USER_ID}/.bashrc
 
 # Explicitly initialize and activate conda in this script
 eval "$(conda shell.bash hook)"
-conda activate archvelo
 
 export OUTPUT_LOCATION=/omics/groups/OE0132/tandem/nschmidt/ArchVelo_Data
 
@@ -21,7 +20,7 @@ LOG_FILE="${OUTPUT_LOCATION}/archvelo_$(date +%Y%m%d_%H%M%S).log"
   echo "Command: archvelo run"
   echo "=========================================="
   
-  python /omics/groups/OE0132/tandem/nschmidt/DynaVelo_testing/velocity_experiments/archvelo_server.py
+  /home/${USER_ID}/.conda/envs/archvelo/bin/python /omics/groups/OE0132/tandem/nschmidt/DynaVelo_testing/velocity_experiments/archvelo_server.py
   
   EXIT_STATUS=$?
   

@@ -4,7 +4,6 @@ source /home/${USER_ID}/.bashrc
 
 # Explicitly initialize and activate conda in this script
 eval "$(conda shell.bash hook)"
-conda activate dynavelo
 
 export OUTPUT_LOCATION=/omics/groups/OE0132/tandem/nschmidt/MultiVelo_Data
 
@@ -18,10 +17,10 @@ LOG_FILE="${OUTPUT_LOCATION}/multivelo_$(date +%Y%m%d_%H%M%S).log"
 {
   echo "=========================================="
   echo "Job started at $(date)"
-  echo "Command: velocyto run"
+  echo "Command: multivelo run"
   echo "=========================================="
   
-  python /omics/groups/OE0132/tandem/nschmidt/DynaVelo_testing/velocity_experiments/multivelo_server.py
+  /home/${USER_ID}/.conda/envs/multivelo/bin/python /omics/groups/OE0132/tandem/nschmidt/DynaVelo_testing/velocity_experiments/multivelo_server.py
   
   EXIT_STATUS=$?
   
