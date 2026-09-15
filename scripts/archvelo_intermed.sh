@@ -5,22 +5,22 @@ source /home/${USER_ID}/.bashrc
 # Explicitly initialize and activate conda in this script
 eval "$(conda shell.bash hook)"
 
-export OUTPUT_LOCATION=/omics/groups/OE0132/tandem/nschmidt/MultiVelo_Data
+export OUTPUT_LOCATION=/omics/groups/OE0132/tandem/nschmidt/ArchVelo_Data
 
 # Create output directory if it doesn't exist
 mkdir -p ${OUTPUT_LOCATION}
 
 # Create timestamped log filename
-LOG_FILE="${OUTPUT_LOCATION}/multivelo_$(date +%Y%m%d_%H%M%S).log"
+LOG_FILE="${OUTPUT_LOCATION}/archvelo_$(date +%Y%m%d_%H%M%S).log"
 
 # Log the job start
 {
   echo "=========================================="
   echo "Job started at $(date)"
-  echo "Command: multivelo run"
+  echo "Command: archvelo run"
   echo "=========================================="
   
-  /omics/groups/OE0132/tandem/nschmidt/conda/envs/multivelo/bin/python /omics/groups/OE0132/tandem/nschmidt/DynaVelo_testing/velocity_experiments/multivelo_server.py
+  /omics/groups/OE0132/tandem/nschmidt/conda/envs/archvelo/bin/python /omics/groups/OE0132/tandem/nschmidt/DynaVelo_testing/velocity_experiments/archvelo_server_intermed.py
   
   EXIT_STATUS=$?
   

@@ -1,16 +1,9 @@
-import os
-import scipy
 import numpy as np
 import pandas as pd
-
-import anndata as ad
 import scanpy as sc
 import scvelo as scv
 import multivelo as mv
-
-import matplotlib.pyplot as plt
 import seaborn as sns
-
 import ArchVelo as av
 
 scv.settings.verbosity = 3
@@ -27,7 +20,7 @@ adata_rna = sc.read_h5ad(f"{data_dir_uploaded}all_rna_counts.h5ad")
 adata_atac_raw = sc.read_h5ad(f"{data_dir_uploaded}all_atac_peaks.h5ad")
 
 peak_annotation_raw_path = rf"{data_dir}atac_peak_annotation.tsv"
-peak_annotation_raw = pd.read_csv(peak_annotation_raw_path, sep = '\t', index_col=[0])
+peak_annotation_raw = pd.read_csv(peak_annotation_raw_path, sep = '\t')
 feature_linkage_path = f"{data_dir}analysis/feature_linkage/feature_linkage.bedpe"
 
 n_neigh = 50
@@ -37,9 +30,17 @@ n_pcs = 50
 data_outdir = f"{data_dir_uploaded}archvelo/processed_data/"
 model_outdir = f"{data_dir_uploaded}archvelo/modeling_results/"
 num_comps = 10
-n_jobs = 100
+n_jobs = 4
 
-# Prepare peak annotation file
+# Prepare peak annotation file. First set the index, then compute nearest neighbors for 1:1 correspondence with genes
+chromosome = peak_annotation_raw.loc[:,"chrom"].values
+start = peak_annotation_raw.loc[:,"start"].values
+end = peak_annotation_raw.loc[:,"end"].values
+
+combined_peak_names = [f"{chromosome[i]}:{start[i]}-{end[i]}" for i in range(len(chromosome))]
+peak_annotation_raw["peak_name"] = combined_peak_names
+peak_annotation_raw.set_index("peak_name", inplace = True)
+
 peak_annotation_raw["absolute_distance"] = np.abs(peak_annotation_raw["distance"].values)
 
 peak_annotation = (
@@ -63,6 +64,9 @@ sc.experimental.pp.normalize_pearson_residuals(adata_atac_raw, theta=1)
 adata_atac_raw.layers["pearson"] = adata_atac_raw.X.copy()
 adata_atac_raw_proc = adata_atac_raw.copy()
 
+del adata_atac_raw
+del raw
+
 # Prepare RNA
 scv.pp.filter_and_normalize(adata_rna, min_cells_u = 20, min_cells = 20, min_shared_counts = 100)
 sc.pp.highly_variable_genes(adata_rna, n_top_genes = 1500, 
@@ -74,14 +78,6 @@ sc.pp.neighbors(adata_rna, n_neigh, n_pcs = n_pcs)
 sc.tl.umap(adata_rna)
 
 # Subset peaks
-# chromosome = peak_annotation.loc[:,"chrom"].values
-# start = peak_annotation.loc[:,"start"].values
-# end = peak_annotation.loc[:,"end"].values
-
-# combined_peak_names = [f"{chromosome[i]}:{start[i]}-{end[i]}" for i in range(len(chromosome))]
-# peak_annotation["peak_name"] = combined_peak_names
-# peak_annotation.set_index("peak_name", inplace = True)
-
 peak_annotation = peak_annotation.loc[adata_atac_raw_proc.var_names,:]
 
 # Subset the peaks, for which the corresponding gene is present in the RNA data
@@ -96,9 +92,11 @@ rel_genes = np.unique(peak_annotation[peak_annotation['gene'].isin(adata_rna.var
 adata_atac_raw_multi = sc.read_h5ad(fr"{data_dir_uploaded}all_atac_peaks.h5ad")
 
 adata_atac_agg_peaks = mv.aggregate_peaks_10x(adata_atac_raw_multi, 
-                                    peak_annotation_nn_path, 
+                                    peak_annotation_raw_path, 
                                     feature_linkage_path, 
                                     verbose=True)
+
+del adata_atac_raw_multi
 
 mv.tfidf_norm(adata_atac_agg_peaks)
 
@@ -134,6 +132,11 @@ adata_rna_intersect = adata_rna[shared_cells, shared_genes_total]
 adata_atac_agg_intersect = adata_atac_agg_peaks[shared_cells, shared_genes_total]
 adata_atac_raw_proc_intersect = adata_atac_raw_proc[shared_cells, rel_peaks_total]
 
+del adata_atac_agg_peaks
+del adata_atac_raw_proc
+del peak_annotation_raw
+del peaks_and_genes_in_adata
+
 # Further Process RNA
 sc.pp.pca(adata_rna_intersect, n_pcs)   
 sc.pp.neighbors(adata_rna_intersect, n_neigh, n_pcs = n_pcs)   
@@ -144,27 +147,58 @@ np.random.seed(57)
 pal = list(np.array(sns.color_palette('husl', 11))[np.random.choice(11,11, replace = False)])
 sc.pl.umap(adata_rna_intersect, color = ['cell_type'], palette = pal)
 
+del adata_rna
+del shared_cells
+del shared_genes_atac
+del shared_genes_atac_raw
+del mapped_genes
+del rna_genes
+del aggr_genes
+del atac_raw_genes
+del shared_genes_total
+del peak_mask
+del peaks_in_shared_adata
+del rel_peaks_total
+del rel_genes
+del rel_peaks
+del mask
+
 # Run ArchVelo
 
 # Collect all necessary input data for modeling
+
+adata_rna_intersect.write_h5ad(rf"{data_dir_uploaded}adata_rna_archvelo_proc.h5ad")
 adata_rna = adata_rna_intersect.copy()
 adata_atac_raw = adata_atac_raw_proc_intersect.copy()
 
+del adata_rna_intersect
+del adata_atac_raw_proc_intersect
+
 peak_annotation.to_csv(rf"{data_dir_uploaded}atac_peak_annotation_archvelo_proc.tsv", sep = '\t')
-peak_annotation_proc = pd.read_csv(rf"{data_dir_uploaded}atac_peak_annotation_archvelo_proc.tsv", sep = '\t')
+peak_annotation_proc = peak_annotation.copy()
+#peak_annotation_proc = pd.read_csv(rf"{data_dir_uploaded}atac_peak_annotation_archvelo_proc.tsv", sep = '\t')
+
+del peak_annotation
 
 # Run modeling pipeline
 XC_raw, S_raw = av.apply_AA_no_test(adata_atac_raw, k = num_comps,
                   outdir = f"{model_outdir}archetypes/")
 
+del adata_atac_raw
+
 _, gene_weights = av.annotate_and_summarize(S_raw, peak_annotation_proc, 
                                             outdir = model_outdir)
+
+del S_raw
+del peak_annotation_proc
 
 gene_weights = gene_weights.loc[:, adata_rna.var_names]
 
 atac_AA = av.create_denoised_atac(adata_rna, gene_weights, 
                                   XC_raw, model_outdir = model_outdir,
                                   n_pcs=n_pcs, n_neighbors=n_neigh)
+
+del XC_raw
 
 smooth_arch = sc.read_h5ad(f"{model_outdir}arches.h5ad")
 
@@ -177,6 +211,11 @@ avel = av.apply_ArchVelo_full(adata_rna,
                     n_jobs = n_jobs,
                     n_neighbors = n_neigh,
                     n_pcs = n_pcs)
+
+del adata_rna
+del atac_AA
+del smooth_arch
+del gene_weights
 
 av.velocity_graph(avel)
 av.latent_time(avel)

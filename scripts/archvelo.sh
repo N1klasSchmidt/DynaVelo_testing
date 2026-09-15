@@ -20,7 +20,7 @@ LOG_FILE="${OUTPUT_LOCATION}/archvelo_$(date +%Y%m%d_%H%M%S).log"
   echo "Command: archvelo run"
   echo "=========================================="
   
-  /home/${USER_ID}/.conda/envs/archvelo/bin/python /omics/groups/OE0132/tandem/nschmidt/DynaVelo_testing/velocity_experiments/archvelo_server.py
+  /omics/groups/OE0132/tandem/nschmidt/conda/envs/archvelo/bin/python /omics/groups/OE0132/tandem/nschmidt/DynaVelo_testing/velocity_experiments/archvelo_server.py
   
   EXIT_STATUS=$?
   
