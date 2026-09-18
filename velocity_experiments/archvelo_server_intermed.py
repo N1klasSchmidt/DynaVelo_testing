@@ -1,3 +1,10 @@
+import os
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+
 import numpy as np
 import pandas as pd
 import scanpy as sc
@@ -5,6 +12,10 @@ import scvelo as scv
 import multivelo as mv
 import seaborn as sns
 import ArchVelo as av
+from joblib import parallel_config
+import threadpoolctl
+
+print("threadpoolctl.threadpool_info():", threadpoolctl.threadpool_info())
 
 scv.settings.verbosity = 3
 scv.settings.presenter_view = True
@@ -19,7 +30,7 @@ model_outdir = f"{data_dir_uploaded}archvelo/modeling_results/"
 n_neigh = 50
 n_pcs = 50
 num_comps = 10
-n_jobs = 8
+n_jobs = 50
 
 # Load processed RNA
 adata_rna = sc.read_h5ad("/omics/groups/OE0132/tandem/nschmidt/ArchVelo_Data/adata_rna_archvelo_proc.h5ad")
@@ -31,6 +42,8 @@ smooth_arch = sc.read_h5ad("/omics/groups/OE0132/tandem/nschmidt/ArchVelo_Data/a
 gene_weights = pd.read_csv("/omics/groups/OE0132/tandem/nschmidt/ArchVelo_Data/archvelo/modeling_results/gene_weights.csv", index_col = [0])
 # MultiVelo output
 full_mv_res_denoised = sc.read_h5ad("/omics/groups/OE0132/tandem/nschmidt/ArchVelo_Data/archvelo/modeling_results/multivelo_result_denoised_chrom.h5ad")
+
+print("Loaded all data.")
 
 def apply_ArchVelo_intermed(adata_rna, 
                         #atac_AA_denoised,
@@ -46,23 +59,27 @@ def apply_ArchVelo_intermed(adata_rna,
                         n_jobs=-1, 
                         n_neighbors=50, 
                         n_pcs=50, 
-                        verbose=False):
+                        verbose=True):
     
     avel = av.apply_ArchVelo(adata_rna, full_res_denoised, smooth_arch, gene_weights, model_outdir, gene_list=gene_list, method=method, maxiter1=maxiter1, max_outer_iter=max_outer_iter, update_mode=update_mode, n_jobs=n_jobs, verbose=verbose)
     return avel
 
-
-# Main ArchVelo method, using all the pre-computed results we already have!
-avel = apply_ArchVelo_intermed(adata_rna,
-                    full_mv_res_denoised,
-                    smooth_arch,
-                    gene_weights,
-                    model_outdir,
-                    n_jobs = n_jobs,
-                    n_neighbors = n_neigh,
-                    n_pcs = n_pcs)
+with parallel_config(backend='loky', verbose=50, inner_max_num_threads=1,
+                      temp_folder=os.environ.get("TMPDIR", "/tmp")):
+                      
+  # Main ArchVelo method, using all the pre-computed results we already have!
+  avel = apply_ArchVelo_intermed(adata_rna,
+                      full_mv_res_denoised,
+                      smooth_arch,
+                      gene_weights,
+                      model_outdir,
+                      n_jobs = n_jobs,
+                      n_neighbors = n_neigh,
+                      n_pcs = n_pcs)
 
 avel.write(f"{data_dir_uploaded}archvelo_intermed_result.h5ad")
+
+print("Finished ArchVelo run, saved data.")
 
 del adata_rna
 #del atac_AA
