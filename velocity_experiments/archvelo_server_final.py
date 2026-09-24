@@ -22,7 +22,7 @@ pd.set_option('display.max_rows', 200)
 np.set_printoptions(suppress=True)
 
 data_dir_uploaded = "/omics/groups/OE0132/tandem/nschmidt/ArchVelo_Data/"
-
+ 
 avel = sc.read_h5ad(f"{data_dir_uploaded}archvelo_final_result.h5ad")
 avel.obs['lthsc_root'] = (avel.obs['cell_type'] == 'LT-HSC').astype(float)
 
