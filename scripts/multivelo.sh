@@ -20,7 +20,7 @@ LOG_FILE="${OUTPUT_LOCATION}/multivelo_$(date +%Y%m%d_%H%M%S).log"
   echo "Command: multivelo run"
   echo "=========================================="
   
-  /omics/groups/OE0132/tandem/nschmidt/conda/envs/multivelo/bin/python /omics/groups/OE0132/tandem/nschmidt/DynaVelo_testing/velocity_experiments/multivelo_server.py
+  /omics/groups/OE0132/tandem/nschmidt/conda/envs/dynavelo/bin/python /omics/groups/OE0132/tandem/nschmidt/DynaVelo_testing/velocity_experiments/multivelo_server.py
   
   EXIT_STATUS=$?
   

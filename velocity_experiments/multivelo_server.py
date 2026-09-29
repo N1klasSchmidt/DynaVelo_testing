@@ -66,6 +66,10 @@ adata_rna.obs.rename(columns={"cell_type": "celltype"}, inplace=True)
 adata_rna = adata_rna[shared_cells, shared_genes]
 adata_atac = adata_atac[shared_cells, shared_genes]
 
+#### Set highly variable genes manually to use only dedicated marker genes ####
+embedding_genes = pd.read_csv(r"/omics/groups/OE0132/tandem/nschmidt/MultiVelo_Data/pca_embedding_genes.csv", header=[0]).T.values.tolist()[0]
+adata_rna.var['highly_variable'] = adata_rna.var_names.isin(embedding_genes)
+
 scv.pp.normalize_per_cell(adata_rna)
 scv.pp.log1p(adata_rna)
 scv.pp.moments(adata_rna, n_pcs=30, n_neighbors=50)
